@@ -4,7 +4,6 @@ namespace Laravel\Octane\Tables\Concerns;
 
 use Illuminate\Support\Arr;
 use Laravel\Octane\Exceptions\ValueTooLargeForColumnException;
-use Swoole\Table;
 
 trait EnsuresColumnSizes
 {
@@ -22,7 +21,7 @@ trait EnsuresColumnSizes
 
             [$type, $size] = $this->columns[$column];
 
-            if ($type == Table::TYPE_STRING && strlen($value) > $size) {
+            if ($type == static::TYPE_STRING && strlen($value) > $size) {
                 throw new ValueTooLargeForColumnException(sprintf(
                     'Value [%s...] is too large for [%s] column.',
                     substr($value, 0, 20),

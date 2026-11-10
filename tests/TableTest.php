@@ -4,17 +4,17 @@ namespace Laravel\Octane\Tests;
 
 use Laravel\Octane\Exceptions\ValueTooLargeForColumnException;
 use Laravel\Octane\Tables\OpenSwooleTable;
+use Laravel\Octane\Tables\PamTable;
 use Laravel\Octane\Tables\SwooleTable;
 use Laravel\Octane\Tables\TableFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Swoole\Table;
 
 class TableTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (! extension_loaded('openswoole') && ! extension_loaded('swoole')) {
-            $this->markTestSkipped('Require openswoole/swoole extension');
+        if (! TableFactory::supported()) {
+            $this->markTestSkipped('Require openswoole/swoole extension or the PAM runtime');
         }
 
         parent::setUp();
@@ -33,7 +33,7 @@ class TableTest extends TestCase
             return $this->assertInstanceOf(OpenSwooleTable::class, $table);
         }
 
-        return $this->assertInstanceOf(SwooleTable::class, $table);
+        return $this->assertInstanceOf($this->tableClass(), $table);
     }
 
     public function test_it_gets_used_while_creating_an_table()
@@ -57,7 +57,7 @@ class TableTest extends TestCase
             return $this->assertInstanceOf(OpenSwooleTable::class, $table);
         }
 
-        return $this->assertInstanceOf(SwooleTable::class, $table);
+        return $this->assertInstanceOf($this->tableClass(), $table);
     }
 
     public function test_it_gets_used_while_creating_an_timer_table()
@@ -70,7 +70,7 @@ class TableTest extends TestCase
             return $this->assertInstanceOf(OpenSwooleTable::class, $table);
         }
 
-        return $this->assertInstanceOf(SwooleTable::class, $table);
+        return $this->assertInstanceOf($this->tableClass(), $table);
     }
 
     public function test_can_use_all_available_rows()
@@ -159,11 +159,16 @@ class TableTest extends TestCase
         ];
     }
 
+    protected function tableClass()
+    {
+        return extension_loaded('swoole') ? SwooleTable::class : PamTable::class;
+    }
+
     protected function createSwooleTable()
     {
         return tap(TableFactory::make(1000), function ($table) {
-            $table->column('string', Table::TYPE_STRING, 10);
-            $table->column('int', Table::TYPE_INT);
+            $table->column('string', TableFactory::TYPE_STRING, 10);
+            $table->column('int', TableFactory::TYPE_INT);
 
             $table->create();
         });

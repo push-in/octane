@@ -26,6 +26,7 @@ class StartPamCommand extends Command implements SignalableCommandInterface
                     {--port= : The port the server should be available on}
                     {--workers=auto : The number of workers that should be available to handle requests}
                     {--max-requests=500 : The number of requests to process before reloading the server}
+                    {--task-workers=0 : The number of task workers that should be available to handle tasks and ticks}
                     {--watch : Automatically reload the server when the application is modified}
                     {--poll : Use file system polling while watching in order to watch files over a network}';
 
@@ -72,6 +73,7 @@ class StartPamCommand extends Command implements SignalableCommandInterface
             realpath(__DIR__.'/../../bin/pam-worker.php'),
             ...($this->workerCount() ? ['--workers', (string) $this->workerCount()] : []),
             '--max-requests', $this->option('max-requests'),
+            ...($this->taskWorkers() ? ['--task-workers', $this->taskWorkers()] : []),
         ], base_path(), [
             'APP_ENV' => app()->environment(),
             'APP_BASE_PATH' => base_path(),
@@ -79,6 +81,11 @@ class StartPamCommand extends Command implements SignalableCommandInterface
             'OCTANE_HOST' => $this->getHost(),
             'OCTANE_PORT' => $this->getPort(),
             'REQUEST_MAX_EXECUTION_TIME' => config('octane.max_execution_time', 30),
+            'OCTANE_CONFIG' => json_encode([
+                'tables' => config('octane.tables', []),
+                'cache' => config('octane.cache'),
+                'tick' => config('octane.tick', true),
+            ]),
         ], null, null))->start();
 
         $serverStateFile->writeProcessId($server->getPid());
@@ -101,6 +108,20 @@ class StartPamCommand extends Command implements SignalableCommandInterface
             'maxRequests' => $this->option('max-requests'),
             'octaneConfig' => config('octane'),
         ]);
+    }
+
+    /**
+     * Get the number of task workers that should be started ("auto" starts one per CPU).
+     *
+     * @return string|null
+     */
+    protected function taskWorkers()
+    {
+        if ($this->option('task-workers') === 'auto') {
+            return 'auto';
+        }
+
+        return (int) $this->option('task-workers') > 0 ? (string) (int) $this->option('task-workers') : null;
     }
 
     /**

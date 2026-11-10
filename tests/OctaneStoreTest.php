@@ -5,13 +5,14 @@ namespace Laravel\Octane\Tests;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Laravel\Octane\Cache\OctaneStore;
+use Laravel\Octane\Tables\TableFactory;
 
 class OctaneStoreTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (! extension_loaded('openswoole') && ! extension_loaded('swoole')) {
-            $this->markTestSkipped('Require openswoole/swoole extension');
+        if (! TableFactory::supported()) {
+            $this->markTestSkipped('Require openswoole/swoole extension or the PAM runtime');
         }
 
         parent::setUp();

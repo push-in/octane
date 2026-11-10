@@ -14,7 +14,6 @@ use Mockery;
 use Orchestra\Testbench\Concerns\InteractsWithMockery;
 use Orchestra\Testbench\Foundation\Application as Testbench;
 use PHPUnit\Framework\TestCase as BaseTestCase;
-use Swoole\Table;
 
 use function Orchestra\Testbench\default_skeleton_path;
 
@@ -56,8 +55,8 @@ class TestCase extends BaseTestCase
 
         $cacheTable = TableFactory::make($config['cache']['rows'] ?? 1000);
 
-        $cacheTable->column('value', Table::TYPE_STRING, $config['cache']['bytes'] ?? 10000);
-        $cacheTable->column('expiration', Table::TYPE_INT);
+        $cacheTable->column('value', TableFactory::TYPE_STRING, $config['cache']['bytes'] ?? 10000);
+        $cacheTable->column('expiration', TableFactory::TYPE_INT);
 
         $cacheTable->create();
 

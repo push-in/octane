@@ -4,6 +4,7 @@ namespace Laravel\Octane;
 
 use Exception;
 use Laravel\Octane\Swoole\WorkerState;
+use Laravel\Octane\Tables\PamTable;
 use Swoole\Http\Server;
 use Swoole\Table;
 use Throwable;
@@ -16,15 +17,15 @@ class Octane
     use Concerns\RegistersTickHandlers;
 
     /**
-     * Get a Swoole table instance.
+     * Get a Swoole (or PAM) table instance.
      */
-    public function table(string $table): Table
+    public function table(string $table): Table|PamTable
     {
-        if (! app()->bound(Server::class)) {
-            throw new Exception('Tables may only be accessed when using the Swoole server.');
-        }
-
-        $tables = app(WorkerState::class)->tables;
+        $tables = match (true) {
+            app()->bound(Server::class) => app(WorkerState::class)->tables,
+            app()->bound('octane.tables') => app('octane.tables'),
+            default => throw new Exception('Tables may only be accessed when using the Swoole or PAM server.'),
+        };
 
         if (! isset($tables[$table])) {
             throw new Exception("Swoole table [{$table}] has not been configured.");
